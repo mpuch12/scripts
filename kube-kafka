@@ -1,0 +1,51 @@
+#!/bin/bash
+
+bootstrap_IP=$(kubectl get service default-kafka-bootstrap -o json | jq -r '.spec.clusterIP')
+kafka_namespace='kafka'
+kafka_server_pod_name=$(kubectl get pods | grep default-kafka | cut -d ' ' -f 1| head -n 1)
+
+flag=$1
+topic=$2
+
+flag_read="--read"
+flag_list="--list"
+
+
+print_help(){
+	echo ""
+	echo "This mights help you :D"
+	echo ""
+	echo "kube-kafka --list		list all kafka topics"
+	echo "kube-kafka --read TOPIC_NAME	read all messages with headers from topic TOPIC_NAME"
+	echo ""
+}
+
+set_kafka_namespace(){
+	kubectl config set-context --current "--namespace=$kafka_namespace"
+}
+
+read_kafka_topic(){
+	kubectl exec --stdin --tty $kafka_server_pod_name  -- /bin/bash -c "./bin/kafka-console-consumer.sh --bootstrap-server=$bootstrap_IP:9092 --topic $topic --from-beginning 									--property print.headers=true"
+}
+
+list_kafka_topics(){
+	kubectl exec --stdin --tty $kafka_server_pod_name  -- /bin/bash -c "./bin/kafka-topics.sh --bootstrap-server=$bootstrap_IP:9092 --list"
+}
+
+
+
+if [[ -n "$flag" ]]; then
+	set_kafka_namespace
+	
+	case "$flag" in 
+		"$flag_read") read_kafka_topic
+		;;
+		"$flag_list") list_kafka_topics 
+		;;
+		*)
+		print_help
+	esac
+else
+	print_help	
+fi
+

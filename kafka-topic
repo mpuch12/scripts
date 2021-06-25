@@ -1,0 +1,59 @@
+#!/bin/bash
+
+HELP="
+ This might help you :D
+ 
+ kafka-topic --list				List all topics from working kafka server
+ kafka-topic --delete TOPIC_NAME	Mark topic TOPIC_NAME for deletion. It works only if kafka server is not running. Topic TOPIC_NAME will be delete on kafka server startup.
+ kafka-topic --delete-all		Mark all topics for deletion. It works only if kafka server is not running. Topics will be delete on kafka server startup.
+ kafka-topic --read TOPIC_NAME		List all messages from topic TOPIC_NAME
+ kafka-topic --write TOPIC_NAME		Now you can write some fancy messages to topic TOPIC_NAME
+ kafka-topic --create TOPIC_NAME		Creates new topic
+ 
+"
+flag_delete="--delete"
+flag_help="--help"
+flag_delete_all="--delete-all"
+flag_read="--read"
+flag_write="--write"
+flag_list="--list"
+flag_create="--create"
+
+flags=($flag_write $flag_read $flag_delete_all $flag_undo_delete $flag_help $flag_create)
+
+topic=$2	
+flag=$1
+
+if [[ -n "$flag" ]]; then
+	if [[ "$flag" == "$flag_delete_all" ]]; then
+		all_topics=( $(kafka-topics.sh --zookeeper localhost:2181 --list) )
+		for tp in "${all_topics[@]}"
+		do
+			if [[ $tp != "__consumer_offsets" ]]; then
+				kafka-topics.sh --zookeeper localhost:2181 --delete --topic $tp
+			fi
+		done
+	elif [[ "$flag" == "$flag_read" ]]; then
+		kafka-console-consumer.sh --topic $topic --from-beginning --bootstrap-server localhost:9092
+	elif [[ "$flag" == "$flag_write" ]]; then
+		kafka-console-producer.sh --topic $topic --bootstrap-server localhost:9092
+	elif [[ "$flag" == "$flag_delete" ]]; then
+		kafka-topics.sh --zookeeper localhost:2181 --delete --topic $topic
+	elif [[ "$flag" == "$flag_list" ]]; then
+		kafka-topics.sh --zookeeper localhost:2181 --list
+	elif [[ "$flag" == "$flag_create" ]]; then
+		kafka-topics.sh --create --topic $topic --bootstrap-server localhost:9092
+	else
+		echo "$HELP"
+	fi
+	
+fi
+exit 1
+
+if [[ "$1" =~ "${flags[@]}" ]]; then
+	topic=$2
+	flag=$1
+else
+	echo "$HELP"	
+fi
+	
