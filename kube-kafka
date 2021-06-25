@@ -25,7 +25,7 @@ set_kafka_namespace(){
 }
 
 read_kafka_topic(){
-	kubectl exec --stdin --tty $kafka_server_pod_name  -- /bin/bash -c "./bin/kafka-console-consumer.sh --bootstrap-server=$bootstrap_IP:9092 --topic $topic --from-beginning 									--property print.headers=true"
+	kubectl exec --stdin --tty $kafka_server_pod_name  -- /bin/bash -c "./bin/kafka-console-consumer.sh --bootstrap-server=$bootstrap_IP:9092 --topic $topic --from-beginning --property print.headers=true"
 }
 
 list_kafka_topics(){
